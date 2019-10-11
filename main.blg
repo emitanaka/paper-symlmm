@@ -1,0 +1,17 @@
+[0] Config.pm:302> INFO - This is Biber 2.11
+[0] Config.pm:305> INFO - Logfile is 'main.blg'
+[39] biber-darwin:313> INFO - === Fri Oct 11, 2019, 20:43:08
+[59] Biber.pm:371> INFO - Reading 'main.bcf'
+[141] Biber.pm:857> INFO - Found 24 citekeys in bib section 0
+[153] Biber.pm:3976> INFO - Processing section 0
+[164] Biber.pm:4136> INFO - Looking for bibtex format file 'biblio.bib' for section 0
+[166] bibtex.pm:1500> INFO - LaTeX decoding ...
+[197] bibtex.pm:1316> INFO - Found BibTeX data source 'biblio.bib'
+[199] Utils.pm:193> WARN - Duplicate entry key: 'nlme' in file 'biblio.bib', skipping ...
+[355] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'variable = shifted' with 'variable = non-ignorable'
+[355] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'normalization = NFD' with 'normalization = prenormalized'
+[355] Biber.pm:3804> INFO - Sorting list 'nyt/global//global/global' of type 'entry' with template 'nyt' and locale 'en-US'
+[355] Biber.pm:3810> INFO - No sort tailoring available for locale 'en-US'
+[379] bbl.pm:617> INFO - Writing 'main.bbl' with encoding 'UTF-8'
+[398] bbl.pm:720> INFO - Output to main.bbl
+[398] Biber.pm:110> INFO - WARNINGS: 1

@@ -1,0 +1,140 @@
+% This is samplepaper.tex, a sample chapter demonstrating the
+% LLNCS macro package for Springer Computer Science proceedings;
+% Version 2.20 of 2017/10/04
+%
+\documentclass[runningheads]{llncs}
+
+
+\usepackage{amssymb,amsmath}
+% adjust the border around images
+\usepackage[export]{adjustbox}
+\fboxsep=5mm%padding thickness
+
+% use this so that maths font is the same as the Keynote maths
+\usepackage{stix}
+%\usepackage{mathspec}
+%\setmathfont(Digits,Latin,Greek)[$for(mathfontoptions)$$mathfontoptions$$sep$,$endfor$]{$mathfont$}
+
+
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+% This helps to correct the tilde centering in texttt  
+%\usepackage{lmodern} % ruins other maths symbols
+%\usepackage[T1]{fontenc}
+%\usepackage{textcomp}
+%\newcommand{\textapprox}{\raisebox{0.5ex}{\texttildelow}}
+
+\usepackage{textcomp}
+
+\makeatletter
+
+\newcommand\midtilde@raisedtilde[1][.5]{\raisebox{#1ex}{\texttildelow}}
+\def\midtilde@normaltilde{\texttildelow}
+
+\newcommand\midtilde%
+{%
+  \expandafter\in@\expandafter{\f@family}%
+    {cmr,cmss,cmtt,cmm,cmsy,cmx,%
+    lmr,lmss,lmtt,lmm,lmsy,lmx,%
+    pxr,pxss,pxm,pxsy,pxx,%
+    txr,txss,txm,txsy,txx}%
+  \ifin@%
+    \midtilde@raisedtilde%
+  \else%
+    \expandafter\in@\expandafter{\f@family}%
+    {pxtt,txtt}%
+    \ifin@%
+      \midtilde@raisedtilde[.35]%
+    \else%
+      \midtilde@normaltilde%
+    \fi%
+  \fi%
+}
+
+
+$if(natbib)$
+\usepackage[$natbiboptions$]{natbib}
+\bibliographystyle{$if(biblio-style)$$biblio-style$$else$plainnat$endif$}
+$endif$
+$if(biblatex)$
+\usepackage[$if(biblio-style)$style=$biblio-style$,$endif$$for(biblatexoptions)$$biblatexoptions$$sep$,$endfor$]{biblatex}
+$for(bibliography)$
+\addbibresource{$bibliography$}
+$endfor$
+$endif$
+
+% R Markdown
+$if(highlighting-macros)$
+$highlighting-macros$
+$endif$
+
+%
+\usepackage{graphicx}
+% Used for displaying a sample figure. If possible, figure files should
+% be included in EPS format.
+%
+% If you use the hyperref package, please uncomment the following line
+% to display URLs in blue roman font according to Springer's eBook style:
+% \renewcommand\UrlFont{\color{blue}\rmfamily}
+
+%
+\title{$title$$if(support)$\thanks{$support$}$endif$}
+%
+%\titlerunning{Abbreviated paper title}
+% If the paper title is too long for the running head, you can set
+% an abbreviated paper title here
+%
+\author{$for(author)$$author.othernames$ $author.familyname$\inst{$author.instno$}$if(author.orcid)$\orcidID{$author.orcid$}$endif$$sep$ \and $endfor$}
+%
+$for(author)$
+$if(author.firstauthor)$\authorrunning{$author.shorten$ et al.}$endif$
+$endfor$
+% First names are abbreviated in the running head.
+% If there are more than two authors, 'et al.' is used.
+%
+\institute{$for(author)$$author.institute$$if(author.email)$\\\email{$author.email$}\\$endif$$sep$ \and $endfor$}
+
+\usepackage[unicode=true]{hyperref}
+$if(colorlinks)$
+\PassOptionsToPackage{usenames,dvipsnames}{color} % color is loaded by hyperref
+$endif$
+\hypersetup{
+$if(title-meta)$
+            pdftitle={$title-meta$},
+$endif$
+$if(author-meta)$
+            pdfauthor={$author-meta$},
+$endif$
+$if(keywords)$
+            pdfkeywords={$for(keywords)$$keywords$$sep$, $endfor$},
+$endif$
+$if(colorlinks)$
+            colorlinks=true,
+            linkcolor=$if(linkcolor)$$linkcolor$$else$Maroon$endif$,
+            citecolor=$if(citecolor)$$citecolor$$else$Blue$endif$,
+            urlcolor=$if(urlcolor)$$urlcolor$$else$Blue$endif$,
+$else$
+            pdfborder={0 0 0},
+$endif$
+            breaklinks=true}
+
+\begin{document}
+
+%
+\maketitle              % typeset the header of the contribution
+%
+\begin{abstract}
+$if(abstract)$$abstract$$endif$
+%The abstract should briefly summarize the contents of the paper in
+%15--250 words.
+$if(keyword)$\keywords{$for(keyword)$$keyword$$sep$ \and $endfor$}$endif$
+\end{abstract}
+
+$body$
+
+$if(biblatex)$
+\printbibliography$if(biblio-title)$[title=$biblio-title$]$endif$
+$endif$
+
+\end{document}
