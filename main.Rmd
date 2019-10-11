@@ -174,7 +174,7 @@ The chicken weight data is originally sourced from @chickendata and found as a b
 knitr::include_graphics("images/symbolic_lmm.png")
 ```
 
-(ref:symbolic-lmm) This figure shows a longtiduinal analysis of the chicken data (see Section \@ref(chick)). The index form of the model equation shows direct resemblance for symbolic model formula in `lmer` for the fixed and random effects, however, the its covariance form is not as easily inferred. In contrast, the symbolic model formula in `asreml` show resemblance of the covariance structure specified in the second argument of `~str`, however, the corresponding random effects specified in the first argument of `~str` must be vectorised as show in the above figure.
+(ref:symbolic-lmm) This figure shows a longtiduinal analysis of the chicken data (see Section \@ref(chick)). The index form of the model equation shows direct resemblance for symbolic model formula in `lmer` for the fixed and random effects, however, the its covariance form is not as easily inferred. In contrast, the symbolic model formula in `asreml` show resemblance of the covariance structure specified in the second argument of `~str`, however, the corresponding random effects specified in the first argument of `~str` must be vectorised as show in the above figure. This results in the loss of one-to-one correspondence between effects and symbolic terms for `asreml`.
 
 The model fitted in Figure \@ref(fig:symbolic-lmm) is commonly referred to as *random intercept and random slope model* with the diet treatment effect. More specifically, the model 
 $$y_{ij} = \beta_0 + \beta_1 + \alpha_{T(i)} + b_{0i} + b_{1i}x_{ij} + e_{ij}$$
