@@ -4,4 +4,5 @@
 *.key
 *.blg
 *.out
-
+main_cache/
+comments/
