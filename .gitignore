@@ -6,3 +6,4 @@
 *.out
 main_cache/
 comments/
+.Rproj.user
