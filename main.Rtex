@@ -98,6 +98,19 @@
 \newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
 \newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
 
+% this supposedly fixes the high tilde to mid tilde for code output of knitr
+\usepackage{xspace}
+\newcommand{\mytilde}{\lower.80ex\hbox{\char`\~}\xspace}
+<<setup, include=FALSE>>=
+library(knitr)
+hook_source = knit_hooks$get('source')
+knit_hooks$set(source = function(x, options) {
+  txt = hook_source(x, options)
+  # extend the default source hook
+  gsub('~', '\\\\mytilde', txt)
+})
+@
+
 %
 \usepackage{graphicx}
 % Used for displaying a sample figure. If possible, figure files should
@@ -190,16 +203,10 @@ Categorical variables are typically converted to a set of dummy variables consis
 Interaction effects are specfied easily with symbolic model formula by use of \texttt{:} operator as seen in Figure \ref{fig:symbolic-lm-factor}. The formula in Figure \ref{fig:symbolic-lm-factor} can also be written more compactly as \texttt{sqrt(Weight)} \texttt{\midtilde\ }\texttt{1\ +\ Block\ +\ Population\ *\ Herbicide} where \texttt{*} operator fits is the short hand for main effects and the interaction effects. Further shorthand exists for her higher order interactions, e.g. \texttt{y \midtilde\ }\texttt{1\ +\ (x1\ +\ x2\ +\ x3)\^{}3} is equivalent to\\
 \texttt{y \midtilde\ }\texttt{1\ +\ x1\ +\ x2\ +\ x3\ +\ x1:x2\ +\ x1:x3\ +\ x2:x3\ +\ x1:x2:x3}, a model that contains main effects, two-way and three-way interaction effects. The \texttt{1} can be included in the bracket as \texttt{y \midtilde\ }\texttt{(1\ +\ x1\ +\ x2\ +\ x3)\^{}3} to yield the same result. Perhaps surprisingly \texttt{y \midtilde\ }\texttt{(0\ +\ x1\ +\ x2\ +\ x3)\^{}3} does not include the intercept in the fitted model as \texttt{0} is converted to \texttt{-1} and carried outside the bracket and power operator. The formula simplification rule, say for \texttt{y \midtilde\ }\texttt{(0\ +\ x1\ +\ x2\ +\ x3)\^{}3}, in R can be found by
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\KeywordTok{formula}\NormalTok{(}\KeywordTok{terms}\NormalTok{(y }\OperatorTok{~}\StringTok{ }\NormalTok{(}\DecValTok{0} \OperatorTok{+}\StringTok{ }\NormalTok{x1 }\OperatorTok{+}\StringTok{ }\NormalTok{x2 }\OperatorTok{+}\StringTok{ }\NormalTok{x3)}\OperatorTok{^}\DecValTok{3}\NormalTok{, }\DataTypeTok{simplify =} \OtherTok{TRUE}\NormalTok{))}
-\end{Highlighting}
-\end{Shaded}
+<<>>=
+formula(terms(y ~ (0 + x1 + x2 + x3)^3, simplify = TRUE))
+@
 
-\begin{verbatim}
-## y ~ x1 + x2 + x3 + x1:x2 + x1:x3 + x2:x3 + x1:x2:x3 - 1
-## <environment: 0x7fac64b0ef28>
-\end{verbatim}
 
 \hypertarget{trees}{%
 \subsection{Trees Volume: Linear Model}\label{trees}}
@@ -227,17 +234,17 @@ where index \(i\) denotes for level of population; index \(j\) for level of herb
 \item
   \texttt{y} \texttt{\midtilde\ }\texttt{1*x} simplifies to \texttt{y} \texttt{\midtilde\ }\texttt{1}, which may be surprising since
 \item
-  \texttt{y} \texttt{\midtilde\ }\texttt{x*1} simplifies to \texttt{y} \texttt{\midtilde\ }\texttt{x}, which makes the cross operator unsymmetrial for this special case.
+  \texttt{y} \texttt{\midtilde\ }\texttt{x*1} simplifies to \texttt{y} \texttt{\midtilde\ }\texttt{x}, which makes the cross operator unsymmetrical for this special case.
 \end{itemize}
 
-Some unambiguity arise from the need to explictly remove intercept, e.g.
+Some unambiguity arise from the need to explicitly remove intercept, e.g.
 
 \begin{itemize}
 \tightlist
 \item
   \texttt{y} \texttt{\midtilde\ }\texttt{1\ +\ (-1\ +\ x)} simplifies to \texttt{y} \texttt{\midtilde\ }\texttt{x\ -\ 1},
 \item
-  \texttt{y} \texttt{\midtilde\ }\texttt{-1:x} simplifies to non-sensical \texttt{y} \texttt{\midtilde\ }\texttt{1\ -\ 1}, which is equivalen to \texttt{y} \texttt{\midtilde\ }\texttt{0}.
+  \texttt{y} \texttt{\midtilde\ }\texttt{-1:x} simplifies to nonsensical \texttt{y} \texttt{\midtilde\ }\texttt{1\ -\ 1}, which is equivalent to \texttt{y} \texttt{\midtilde\ }\texttt{0}.
 \end{itemize}
 
 The first point was raised by \textcite{patsy} and formula evaluation differ in \texttt{patsy} python library in this aspect. These complications arise due to explicit specification of removal of the overall intercept. Furthermore, this removes the resemblance to model equation detracting from the aim of symbolic model formula to make it accessible for practitioners.
@@ -274,17 +281,56 @@ This section presents motivating examples with model specification by \texttt{lm
 \hypertarget{chick}{%
 \subsection{Chicken Weight: Longitudinal Analysis}\label{chick}}
 
-The chicken weight data is originally sourced from \textcite{chickendata} and found as a built-in data set in R. It consists of the weights of 50 chickens tracked over regular time intervals (not all weights at each time points are observed). Each chicken are fed one of the 4 diets. A possible model that a user may fit to this chicken weight data is illustrated in Figure \ref{fig:symbolic-lmm} and elaborated next.
+The chicken weight data is originally sourced from \textcite{chickendata} and found as a built-in data set in R. It consists of the weights of 50 chickens tracked over regular time intervals (not all weights at each time points are observed). Each chicken are fed one of the 4 diets. A possible model that a user may fit to this chicken weight data is elaborated next.
+
+In this experimental data, we are clearly interested in the influence of different diets on the chicken weight. We can model the weight of the chicken over time that includes diet effect, overall intercept and slope for time. Fitting these effects as fixed and assuming that the error is i.i.d. means that the observations from same chicken are uncorrelated and there is no variation for the intercept and slope between chickens. This motivates the inclusion of random intercept and random slope for each chicken. More explicitly the weight may be modelled as
+\begin{equation}
+y_{ij} = \beta_0 + \beta_1x_{ij} + \alpha_{T(i)} + b_{0i} + b_{1i}x_{ij} + e_{ij}\label{eq:chickmodel}
+\end{equation}
+where \(y_{ij}\) is the weight of the \(i\)-th chicken at time index \(j\); \(x_{ij}\) is the days since birth at time index \(j\) for the \(i\)-th chicken; \(b_{0i}\) and \(b_{1i}\) are random intercept and random time slope effects for the \(i\)-th chicken; \(\beta_0\) and \(\beta_1\) are the overall intercept and slope for time covariate; and $e_{ij}$ is the random error.
+
+The above model is incomplete without distributional assumptions for the random effects. As intercept and slope clearly measure different units, the variance will be parameterised differently. We may further make an assumption that the random intercept and random slope are correlated within same chicken, however, independent across chickens. With the typical assumption of mutual independence of random effects and random error; and normally and identically distributed (NID) effects, we may assume that 
+\begin{equation}
+\begin{bmatrix}b_{0i} \\ b_{1i}\end{bmatrix}\sim NID\left(\begin{bmatrix}0\\0 \end{bmatrix}, \begin{bmatrix}\sigma_0^2 & \sigma_{01} \\ \sigma_{01} & \sigma^2_1\end{bmatrix}\right)\qquad\text{and}\qquad e_{ij}\sim NID(0, \sigma^2).\label{eq:NIDassum}
+\end{equation}
+
+If the effects in model \eqref{eq:chickmodel} are vectorised as in model \eqref{eq:lmm} with $$\boldsymbol{u} = (b_{01}, b_{02}, ..., b_{0,50}, b_{11}, b_{12}, ..., b_{1,50})^\top\quad\text{and}\quad \boldsymbol{e} = (e_{ij})$$
+
+then the model assumption \eqref{eq:NIDassum} can also be written as 
+$$\boldsymbol{u}  \sim N\left(\boldsymbol{0}, \begin{bmatrix}\sigma_0^2 & \sigma_{01} \\ \sigma_{01} & \sigma^2_1\end{bmatrix}\otimes \mathbf{I}_{m} \right)\quad\text{and}\quad \boldsymbol{e}\sim N(\boldsymbol{0}, \sigma^2\mathbf{I}_n).$$
+
+The symbolic model formulae that encompasses the model \eqref{eq:chickmodel} coupled with assumption in \eqref{eq:NIDassum} for \texttt{lme4} and \texttt{asreml} are shown in Figure~\ref{fig:symbolic-lmm}. The two symbolic model formulae share the same syntax for fixed effects, however, in this case the random effects syntax is more verbose for \texttt{asreml}.
+
 
 \begin{figure}
-\includegraphics[width=0.9\linewidth,fbox]{images/symbolic_lmm} \caption{This figure shows a longtiduinal analysis of the chicken data (see Section \ref{chick}). The index form of the model equation shows direct resemblance for symbolic model formula in \texttt{lmer} for the fixed and random effects, however, the its covariance form is not as easily inferred. In contrast, the symbolic model formula in \texttt{asreml} show resemblance of the covariance structure specified in the second argument of \texttt{\textasciitilde{}str}, however, the corresponding random effects specified in the first argument of \texttt{\textasciitilde{}str} must be vectorised as show in the above figure. This results in the loss of one-to-one correspondence between effects and symbolic terms for \texttt{asreml}.}\label{fig:symbolic-lmm}
+\includegraphics[width=0.9\linewidth,fbox]{images/symbolic_lmm} \caption{This figure shows a longitudinal analysis of the chicken data (see Section \ref{chick}). The index form of the model equation shows direct resemblance for symbolic model formula in \texttt{lmer} for the fixed and random effects, however, the its covariance form is not as easily inferred. In contrast, the symbolic model formula in \texttt{asreml} show resemblance of the covariance structure specified in the second argument of \texttt{\textasciitilde{}str}, however, the corresponding random effects specified in the first argument of \texttt{\textasciitilde{}str} must be vectorised as show in the above figure. }\label{fig:symbolic-lmm}
 \end{figure}
 
 
+One may wish to modify their assumption such that now we assume
 
-The model fitted in Figure \ref{fig:symbolic-lmm} is commonly referred to as \emph{random intercept and random slope model} with the diet treatment effect. More specifically, the model
-\[y_{ij} = \beta_0 + \beta_1 + \alpha_{T(i)} + b_{0i} + b_{1i}x_{ij} + e_{ij}\]
-where \(y_{ij}\) is the weight of the \(i\)-th chicken at time index \(j\); \(x_{ij}\) is the days since birth at time index \(j\) for the \(i\)-th chicken; \(b_{0i}\) and \(b_{1i}\) are random intercept and random time slope effects for the \(i\)-th chicken; \(\beta_0\) and \(\beta_1\) are the overall intercept and slope for time covariate.
+$$\boldsymbol{u}  \sim N\left(\boldsymbol{0}, \begin{bmatrix}\sigma_0^2 & 0 \\ 0 & \sigma^2_1\end{bmatrix}\otimes \mathbf{I}_{m} \right),$$
+
+i.e. the random slope and random are assumed to be uncorrelated. This uncorrelated model may be specified in \texttt{lme4} by replacing \texttt{|} with \texttt{||} as below.
+<<eval = FALSE>>=
+lmer(weight ~ 1 + Time + Diet + (1 + Time || Chick), 
+     data = ChickWeight)
+@     
+It should be noted that the effects specified on the LHS are uncorrelated if the variables are numerical only. See example in Section~\ref{MET} where this does not work.
+
+<<eval = FALSE>>=
+lmer(weight ~ 1 + Time + Diet + (1 | Chick) + (0 + Time | Chick), 
+     data = ChickWeight)
+@
+
+The same model is specified as below for \texttt{asreml}.
+<<eval = FALSE>>=
+asreml(weight ~ 1 + Time + Diet,
+     random=~ str(~Chick + Chick:Time, ~diag(2):id(50), 
+     data = ChickWeight)
+@
+
+
 
 \hypertarget{atrial}{%
 \subsection{Field Trial: Covariance Structure}\label{atrial}}
@@ -293,7 +339,7 @@ where \(y_{ij}\) is the weight of the \(i\)-th chicken at time index \(j\); \(x_
 \subsection{Multi-Environmental Trial: Separable Structure}\label{MET}}
 
 \begin{figure}
-\includegraphics[width=0.9\linewidth,fbox]{images/symbolic_lmm2} \caption{This figure show the fit of a simple mixed mdoel for the analysis of MET data. In modelling the \texttt{county} by \texttt{gen} random effect, the variance structure are specified differently.}\label{fig:symbolic-lmm2}
+\includegraphics[width=0.9\linewidth,fbox]{images/symbolic_lmm2} \caption{This figure show the fit of a simple mixed model for the analysis of MET data. In modelling the \texttt{county} by \texttt{gen} random effect, the variance structure are specified differently.}\label{fig:symbolic-lmm2}
 \end{figure}
 
 
@@ -310,6 +356,8 @@ The \texttt{brms} papers make extensive discussion of symbolic model formula and
 \section*{Acknowledgement}
 
 This paper benefited from twitter conversation with Thomas Lumley. This paper is made using R Markdown \autocite{rmarkdown}. All materials used to produce this paper and its history of changes can be found on github \url{https://github.com/emitanaka/paper-symlmm}.
+
+
 
 \printbibliography[title=References]
 
