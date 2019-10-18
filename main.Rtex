@@ -53,7 +53,7 @@
 }
 
 
-\usepackage[style=authoryear-comp,]{biblatex}
+\usepackage[style=authoryear,]{biblatex}
 \addbibresource{biblio.bib}
 
 % R Markdown
@@ -100,7 +100,7 @@
 
 % this supposedly fixes the high tilde to mid tilde for code output of knitr
 \usepackage{xspace}
-\newcommand{\mytilde}{\lower.80ex\hbox{\char`\~}\xspace}
+\newcommand{\mytilde}{\lower.80ex\hbox{\char`\~}}
 <<setup, include=FALSE>>=
 library(knitr)
 hook_source = knit_hooks$get('source')
@@ -323,10 +323,10 @@ lmer(weight ~ 1 + Time + Diet + (1 | Chick) + (0 + Time | Chick),
      data = ChickWeight)
 @
 
-The same model is specified as below for \texttt{asreml}.
+The same model is specified as below for \texttt{asreml} where now \texttt{us(2)} is replaced with \texttt{diag(2)}. The correspondence of the variance-covariance structure is immediately obvious. 
 <<eval = FALSE>>=
 asreml(weight ~ 1 + Time + Diet,
-     random=~ str(~Chick + Chick:Time, ~diag(2):id(50), 
+     random=~ str(~Chick + Chick:Time, ~diag(2):id(50)), 
      data = ChickWeight)
 @
 
@@ -334,6 +334,56 @@ asreml(weight ~ 1 + Time + Diet,
 
 \hypertarget{atrial}{%
 \subsection{Field Trial: Covariance Structure}\label{atrial}}
+
+Wheat yield data sourced from the \textttt{agridat} R-package \autocite{agridat} originally appearing in \textcite{Gilmour1997} contains 330 observations from a near randomised complete block experiment with $m=107$ varieties of which 3 varieties have 6 replicates while the rest have 3 replicates. The field trial that the yield data was collected from was laid out in a rectangular array with $r=22$ rows and $c=15$ columns. Each variety replicates are spread uniformly to $b=3$ blocks. The columns 1-5, columns 6-10 and columns 11-15 form three equal blocks of contiguous area within the field trial. The data frame \texttt{gilmour.serpentine} contains the columns for \texttt{yield}, \texttt{gen} (variety), \texttt{rep} (block), \texttt{col} (column) and \texttt{row}. Further columns \texttt{colf} and \texttt{rowf} which are factor versions of \texttt{col} and \texttt{row} are added.
+
+We may model the yield observations $\boldsymbol{y}$, ordered by the rows within columns, using  model \eqref{eq:lmm} where here $\boldsymbol{\beta}$ is the $b\times 1$ vector of replicate block effect and $\boldsymbol{u}$ is the $m \times 1$ vector of variety random effect. We consider next a few covariance structures for $\boldsymbol{u}$ and $\boldsymbol{e}$.
+
+
+\subsubsection{Scaled identity structure.}
+
+We may assume $var(\boldsymbol{u}) = \mathbf{G} = \sigma_g^2 \mathbf{I}_m$, a scaled identity structure. We may additionally assume that $var(\boldsymbol{e}) = \sigma^2\mathbf{I}_n$. In \texttt{lme4} this is fitted as below. To elaborate further, \texttt{lmer} specifies a random intercept for each variety. This intercept will be assumed to be NID with zero mean and $1\times 1$ unstructured variance matrix - essentially a single parameter.
+
+<<eval = FALSE>>=
+lmer(yield ~ 0 + rep + (1 | gen), data = gilmour.serpentine)
+@
+
+The same model is fitted in \texttt{asreml} as below. Particularly, \texttt{idv(gen)} signifies a vector of variety effects with \texttt{idv} variance structure, i.e. a scaled identity structure. This is the default structure in \texttt{asreml} so omitting variance structure, \texttt{random = \mytilde gen}, results in the same fit.
+
+<<eval = FALSE>>=
+asreml(yield ~ 0 + rep, random = ~idv(gen), data = gilmour.serpentine)
+@
+
+\subsubsection{Known covariance structure.} 
+
+Often in plant breeding trials, the varieties of interest have some shared ancestry. This is captured in the form of pedigree data that contains 3 columns: individual ID, mother's ID and father's ID. The related structure is commonly captured by the use of numerator relationship matrix, denoted $\mathbf{A}$ \autocite{Mrode2014}. For example, suppose that individuals $i$ and $j$ are full-siblings then the corresponding $(i,j)$-th entry in $\mathbf{A}$ is 0.5 (average probability that a randomly drawn allele from individual $i$ is identical by descent to the randomly drawn allele at the same autosomal locus from individual $j$). 
+
+We may now assume that $var(\boldsymbol{u}) = \sigma^2_g \mathbf{A}$ to exploit it this known relatedness structure between varieties. The symbolic model formulae in \texttt{lme4} alone is unable to specify this model and an extension R package \texttt{pedigreemm} \autocite{pedigreemm-paper} is required. The pedigree data is parsed to make an object of \texttt{pedigree} class, \texttt{ped}.
+
+<<eval = FALSE>>=
+pedigreemm(yield ~ 0 + rep + (1 | gen), data = gilmour.serpentine,
+     pedigree = list(gen = ped))
+@
+
+<<eval = FALSE>>=
+asreml(yield ~ 0 + rep, random = ~giv(gen), data = gilmour.serpentine,
+     ginverse = list(gen = Ainv))
+@
+
+
+\subsubsection{Error covariance structure.}
+
+
+
+
+<<echo = FALSE, eval = FALSE>>=
+library(ggplot2)
+# data from agridat 
+# note agridat package not loaded in overleaf
+source("data.R")
+ggplot(dat, aes(col, row, fill = rep)) + geom_tile()
+@
+
 
 \hypertarget{MET}{%
 \subsection{Multi-Environmental Trial: Separable Structure}\label{MET}}
