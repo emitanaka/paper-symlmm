@@ -21,7 +21,7 @@
 
 % This helps to correct the tilde centering in texttt  
 %\usepackage{lmodern} % ruins other maths symbols
-%\usepackage[T1]{fontenc}
+%\usepackage[T1]{fontenc}==
 %\usepackage{textcomp}
 %\newcommand{\textapprox}{\raisebox{0.5ex}{\texttildelow}}
 
@@ -127,14 +127,15 @@ knit_hooks$set(source = function(x, options) {
 % If the paper title is too long for the running head, you can set
 % an abbreviated paper title here
 %
-\author{Emi Tanaka\inst{1} \and Francis K. C. Hui\inst{2}}
+\author{Emi Tanaka\inst{1,2} \and Francis K. C. Hui\inst{3}}
 %
 \authorrunning{E. Tanaka et al.}
 
 % First names are abbreviated in the running head.
 % If there are more than two authors, 'et al.' is used.
 %
-\institute{The University of Sydney, Camperdown NSW 2008, Australia\\\email{\href{mailto:dr.emi.tanaka@gmail.com}{\nolinkurl{dr.emi.tanaka@gmail.com}}}\\ \and Australian National University, Acton ACT 2601, Australia\\\email{\href{mailto:francis.hui@anu.edu.au}{\nolinkurl{francis.hui@anu.edu.au}}}\\}
+\institute{The University of Sydney, Camperdown NSW 2008, Australia\\\and
+Monash University, Clayton VIC 3800, Australia\\\email{\href{mailto:dr.emi.tanaka@gmail.com}{\nolinkurl{emi.tanaka@monash.edu}}}\\ \and Australian National University, Acton ACT 2601, Australia\\\email{\href{mailto:francis.hui@anu.edu.au}{\nolinkurl{francis.hui@anu.edu.au}}}\\}
 
 \usepackage[unicode=true]{hyperref}
 \hypersetup{
@@ -276,7 +277,7 @@ The strength of linear mixed model specification in \texttt{asreml} lies in its 
 \hypertarget{examples}{%
 \section{Motivating Examples}\label{examples}}
 
-This section presents motivating examples with model specification by \texttt{lmer} or \texttt{asreml}. It should be noted that the models are not advocated to be ``correct'' but rather a plausible model that a practitioner may consider.
+This section presents motivating examples with model specification by \texttt{lmer} or \texttt{asreml}. It should be noted that the models are not advocated to be ``correct'' but rather a plausible model that a practitioner may consider. For succintness, we omit all \texttt{data} argument to model fit functions.
 
 \hypertarget{chick}{%
 \subsection{Chicken Weight: Longitudinal Analysis}\label{chick}}
@@ -313,21 +314,18 @@ $$\boldsymbol{u}  \sim N\left(\boldsymbol{0}, \begin{bmatrix}\sigma_0^2 & 0 \\ 0
 
 i.e. the random slope and random are assumed to be uncorrelated. This uncorrelated model may be specified in \texttt{lme4} by replacing \texttt{|} with \texttt{||} as below.
 <<eval = FALSE>>=
-lmer(weight ~ 1 + Time + Diet + (1 + Time || Chick), 
-     data = ChickWeight)
+lmer(weight ~ 1 + Time + Diet + (1 + Time || Chick))
 @     
 It should be noted that the effects specified on the LHS are uncorrelated if the variables are numerical only. See example in Section~\ref{MET} where this does not work.
 
 <<eval = FALSE>>=
-lmer(weight ~ 1 + Time + Diet + (1 | Chick) + (0 + Time | Chick), 
-     data = ChickWeight)
+lmer(weight ~ 1 + Time + Diet + (1 | Chick) + (0 + Time | Chick))
 @
 
 The same model is specified as below for \texttt{asreml} where now \texttt{us(2)} is replaced with \texttt{diag(2)}. The correspondence of the variance-covariance structure is immediately obvious. 
 <<eval = FALSE>>=
 asreml(weight ~ 1 + Time + Diet,
-     random=~ str(~Chick + Chick:Time, ~diag(2):id(50)), 
-     data = ChickWeight)
+     random=~ str(~Chick + Chick:Time, ~diag(2):id(50)))
 @
 
 
@@ -345,48 +343,66 @@ We may model the yield observations $\boldsymbol{y}$, ordered by the rows within
 We may assume $var(\boldsymbol{u}) = \mathbf{G} = \sigma_g^2 \mathbf{I}_m$, a scaled identity structure. We may additionally assume that $var(\boldsymbol{e}) = \sigma^2\mathbf{I}_n$. In \texttt{lme4} this is fitted as below. To elaborate further, \texttt{lmer} specifies a random intercept for each variety. This intercept will be assumed to be NID with zero mean and $1\times 1$ unstructured variance matrix - essentially a single parameter.
 
 <<eval = FALSE>>=
-lmer(yield ~ 0 + rep + (1 | gen), data = gilmour.serpentine)
+lmer(yield ~ 0 + rep + (1 | gen))
 @
 
 The same model is fitted in \texttt{asreml} as below. Particularly, \texttt{idv(gen)} signifies a vector of variety effects with \texttt{idv} variance structure, i.e. a scaled identity structure. This is the default structure in \texttt{asreml} so omitting variance structure, \texttt{random = \mytilde gen}, results in the same fit.
 
 <<eval = FALSE>>=
-asreml(yield ~ 0 + rep, random = ~idv(gen), data = gilmour.serpentine)
+asreml(yield ~ 0 + rep, random = ~idv(gen))
 @
 
-\subsubsection{Known covariance structure.} 
+\subsubsection{Crossed random effects.} 
 
-Often in plant breeding trials, the varieties of interest have some shared ancestry. This is captured in the form of pedigree data that contains 3 columns: individual ID, mother's ID and father's ID. The related structure is commonly captured by the use of numerator relationship matrix, denoted $\mathbf{A}$ \autocite{Mrode2014}. For example, suppose that individuals $i$ and $j$ are full-siblings then the corresponding $(i,j)$-th entry in $\mathbf{A}$ is 0.5 (average probability that a randomly drawn allele from individual $i$ is identical by descent to the randomly drawn allele at the same autosomal locus from individual $j$). 
-
-We may now assume that $var(\boldsymbol{u}) = \sigma^2_g \mathbf{A}$ to exploit it this known relatedness structure between varieties. The symbolic model formulae in \texttt{lme4} alone is unable to specify this model and an extension R package \texttt{pedigreemm} \autocite{pedigreemm-paper} is required. The pedigree data is parsed to make an object of \texttt{pedigree} class, \texttt{ped}.
+Field trials often employ rows and/or columns as blocking factors in the experimental design. Furthermore, it is common practice that the management practices of field experiments follow some systematic routine, e.g. harvesting may occur in a serpentine fashion from the first to the last row. These occasionally introduce obvious unwanted noise in the data that are often removed by including random row or column effects assuming  i.i.d. for simplicity. 
 
 <<eval = FALSE>>=
-pedigreemm(yield ~ 0 + rep + (1 | gen), data = gilmour.serpentine,
-     pedigree = list(gen = ped))
+lmer(yield ~ 0 + rep + (1 | gen) + (1 | rowf) + (1 | colf))
 @
 
 <<eval = FALSE>>=
-asreml(yield ~ 0 + rep, random = ~giv(gen), data = gilmour.serpentine,
-     ginverse = list(gen = Ainv))
+asreml(yield ~ 0 + rep, random = ~idv(gen) + idv(rowf) + idv(colf))
 @
 
 
 \subsubsection{Error covariance structure.}
 
+A field trial is often laid out in a rectangular array and observations are from each plot indexed by row and column within this array. The assumption that $var(\boldsymbol{e}) = \sigma^2\mathbf{I}_n$ may be restrictive when there is likely spatial structure, i.e. plots that are geographically closer would be similar than plots further apart. A range of models may be considered for this potential correlation. In practice, a separable autoregressive process order of 1, denoted AR1$\times$AR1, has worked well for its parsimonious but flexible structure \autocite{Gilmour1997}. More specifically, we assume $var(\boldsymbol{e}) = \sigma^2\mathbf{\Sigma}_c\otimes \mathbf{\Sigma}_r$ where $\mathbf{\Sigma}_c$ is a $c \times c$ matrix with $(i,j)$-th entry of $\mathbf{\Sigma}_c$ given as $\rho_c^{|i - j|}$ with autocorrelation parameter $\rho_c$ (similar definition holds for $r\times r$ matrix $\mathbf{\Sigma}_r$ except autocorrelation parameter is denoted $\rho_r$). This model is fitted in \texttt{asreml} by supplying a symbolic formula, \texttt{~ar1(colf):ar1(rowf)}, to the argument \texttt{rcov} as below.
 
-
-
-<<echo = FALSE, eval = FALSE>>=
-library(ggplot2)
-# data from agridat 
-# note agridat package not loaded in overleaf
-source("data.R")
-ggplot(dat, aes(col, row, fill = rep)) + geom_tile()
+<<eval = FALSE>>=
+asreml(yield ~ 0 + rep, random = ~gen, 
+     rcov = ~ar1(colf):ar1(rowf))
 @
 
+In \texttt{asreml}, a separable covariance structure, $\mathbf{\Sigma}_1 \otimes \mathbf{\Sigma}_2$, is specified by the use of an interaction operator where the dimensions and structures of $\mathbf{\Sigma}_1$ and $\mathbf{\Sigma}_2$ are specified by the factor argument and the function that wraps the factor. Here the \texttt{ar1} specifies an autoregressive process of order 1 with dimension given by number of levels in \texttt{rowf} and \texttt{colf}. It is important to note that \texttt{ar1} denotes a correlation matrix and a covariance matrix may be specified by \texttt{ar1v}. A care needs to be taken in covariance specification for separable models as clearly there is a lack of variance parameter(s) where $\mathbf{\Sigma}_1$ and $\mathbf{\Sigma}_2$ are both a correlation structure, whereas if both are covariance structure then the model is overparameterised and unidentifiable. In the error structure of \texttt{rcov}, this is taken care of such that 
+\texttt{rcov = \mytilde ar1v(colf):ar1(rowf)}, \texttt{rcov = \mytilde ar1(colf):ar1v(rowf)} and \texttt{rcov = \mytilde ar1(colf):ar1(rowf)} will fit all the same model. It should be noted that this is not the case for separable covariance structures specified in \texttt{random} effects.
+
+In comparison, the API of \texttt{lmer} function does not allow assumption to be modified from $var(\boldsymbol{e}) = \sigma^2\mathbf{I}_n$. One may of course introduce a random effect, $\boldsymbol{u}_e \sim N(\boldsymbol{0}, \sigma^2\mathbf{\Sigma}_c\otimes \mathbf{\Sigma}_r)$, and  assume $\boldsymbol{e} \sim N(\boldsymbol{0}, \sigma^2\mathbf{I}_n)$. This separable covariance structure however cannot be specified within \texttt{lmer} function, although possible in \texttt{asreml} as \texttt{random = \mytilde gen + ar1v(colf):ar1(rowf)}. Care is required for under/over-parameterisation of covariance structure.
+
+
+\subsubsection{Known covariance structure.} 
+
+Often in plant breeding trials, the varieties of interest have some shared ancestry. This is captured in the form of pedigree data that contains 3 columns: individual ID, mother's ID and father's ID. The related structure is commonly captured by the use of numerator relationship matrix, denoted $\mathbf{A}$ \autocite{Mrode2014}. For example, suppose that individuals $i$ and $j$ are full-siblings then the corresponding $(i,j)$-th entry in $\mathbf{A}$ is 0.5 (average probability that a randomly drawn allele from individual $i$ is identical by descent to the randomly drawn allele at the same autosomal locus from individual $j$). 
+
+We may now assume that $var(\boldsymbol{u}) = \sigma^2_g \mathbf{A}$ to exploit this \textit{known} relatedness structure between varieties. The symbolic model formulae in \texttt{lme4} alone is unable to specify this model and an extension R package \texttt{pedigreemm} \autocite{pedigreemm-paper} is required. The pedigree data is parsed to make an object of \texttt{pedigree} class, \texttt{ped}.
+
+<<eval = FALSE>>=
+pedigreemm(yield ~ 0 + rep + (1 | gen), 
+     pedigree = list(gen = ped))
+@
+
+<<eval = FALSE>>=
+asreml(yield ~ 0 + rep, random = ~giv(gen), 
+     ginverse = list(gen = Ainv))
+@
 
 \hypertarget{MET}{%
 \subsection{Multi-Environmental Trial: Separable Structure}\label{MET}}
+
+CIMMYT Australia ICARDA Germplasm Evaluation (CAIGE) bread wheat yield 2016 data \autocite{CAIGE2016} consists of 7 sites within Australia with an aim of selecting the best genotype (\texttt{gen}). There were 240 genotype tested across seven trials with 252-391 plots with total 2127 yield observations. Each trial employed a partially replicated ($p$-rep) design \autocite{Cullis2006} with two blocks and $p$ ranging from 0.23 to 0.39.
+
+A model may take into account the differential mean yield across sites and allow for different genotypic variations by site. For simplicity, we ignore other variations for now. The model equation may then be given \eqref{eq:mm} where $\boldsymbol{y}$ is the vector of yield (ordered rows within columns within sites); $\boldsymbol{\beta}$ is the vector of site effects; $\boldsymbol{u}$ is the vector of genotype-by-site effects. 
+
 
 \begin{figure}
 \includegraphics[width=0.9\linewidth,fbox]{images/symbolic_lmm2} \caption{This figure show the fit of a simple mixed model for the analysis of MET data. In modelling the \texttt{county} by \texttt{gen} random effect, the variance structure are specified differently.}\label{fig:symbolic-lmm2}
