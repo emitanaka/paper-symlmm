@@ -136,7 +136,7 @@ knit_hooks$set(source = function(x, options) {
 % If there are more than two authors, 'et al.' is used.
 %
 \institute{The University of Sydney, Camperdown NSW 2008, Australia\\\and
-Monash University, Clayton VIC 3800, Australia\\\email{\href{mailto:dr.emi.tanaka@gmail.com}{\nolinkurl{emi.tanaka@monash.edu}}}\\ \and Australian National University, Acton ACT 2601, Australia\\\email{\href{mailto:francis.hui@anu.edu.au}{\nolinkurl{francis.hui@anu.edu.au}}}\\}
+Monash University, VIC 3800, Australia\\\email{\href{mailto:dr.emi.tanaka@gmail.com}{\nolinkurl{emi.tanaka@monash.edu}}}\\ \and Australian National University, Acton ACT 2601, Australia\\\email{\href{mailto:francis.hui@anu.edu.au}{\nolinkurl{francis.hui@anu.edu.au}}}\\}
 
 \usepackage[unicode=true]{hyperref}
 \hypersetup{
